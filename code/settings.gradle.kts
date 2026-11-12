@@ -21,6 +21,7 @@ dependencyResolutionManagement {
 rootProject.name = "aepsdk-core-android"
 include (
         ":core",
+        ":telemetry",
         ":lifecycle",
         ":identity",
         ":signal",

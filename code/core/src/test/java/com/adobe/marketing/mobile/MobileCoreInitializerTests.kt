@@ -19,6 +19,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.adobe.marketing.mobile.internal.configuration.ConfigurationExtension
 import com.adobe.marketing.mobile.internal.eventhub.EventHub
+import com.adobe.marketing.mobile.internal.telemetry.SdkTelemetry
 import com.adobe.marketing.mobile.services.AppContextService
 import com.adobe.marketing.mobile.services.DataStoring
 import com.adobe.marketing.mobile.services.NamedCollection
@@ -175,6 +176,29 @@ class MobileCoreInitializerTests {
         mobileCoreInitializer.registerExtensions(listOf(TestExtension1::class.java)) { latch.countDown() }
 
         assertTrue(latch.await(1000, TimeUnit.MILLISECONDS))
+    }
+
+    @Test
+    fun `telemetry inventory becomes ready only after actual registration completion`() {
+        SdkTelemetry.reset()
+        try {
+            mobileCoreInitializer.setApplication(application)
+            var completion: (() -> Unit)? = null
+            `when`(mockedEventHub.registerExtensions(any(), any())).doAnswer { invocation ->
+                completion = invocation.getArgument(1)
+                Unit
+            }
+            mobileCoreInitializer.registerExtensions(listOf(TestExtension1::class.java), null)
+            assertEquals(false, SdkTelemetry.snapshot().registrationComplete)
+            completion!!.invoke()
+            assertEquals(true, SdkTelemetry.snapshot().registrationComplete)
+            mobileCoreInitializer.registerExtensions(listOf(TestExtension2::class.java), null)
+            assertEquals(false, SdkTelemetry.snapshot().registrationComplete)
+            completion!!.invoke()
+            assertEquals(true, SdkTelemetry.snapshot().registrationComplete)
+        } finally {
+            SdkTelemetry.reset()
+        }
     }
 
     @Test

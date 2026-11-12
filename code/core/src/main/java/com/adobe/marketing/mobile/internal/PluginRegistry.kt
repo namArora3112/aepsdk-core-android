@@ -12,6 +12,8 @@
 package com.adobe.marketing.mobile.internal
 
 import androidx.annotation.VisibleForTesting
+import com.adobe.marketing.mobile.internal.telemetry.SdkTelemetry
+import com.adobe.marketing.mobile.internal.telemetry.TelemetryLifecycle
 import com.adobe.marketing.mobile.plugin.IAepPlugin
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -28,6 +30,7 @@ object PluginRegistry {
     /** Registers a plugin. Idempotent per instance; registration order is preserved. */
     fun addPlugin(plugin: IAepPlugin) {
         plugins.addIfAbsent(plugin)
+        SdkTelemetry.startRegisteredPlugin()
     }
 
     /**
@@ -45,6 +48,10 @@ object PluginRegistry {
     /** Clears all registered plugins. */
     @VisibleForTesting
     fun clear() {
+        plugins.filterIsInstance<TelemetryLifecycle>().forEach {
+            try { it.close() } catch (_: RuntimeException) { /* Optional cleanup is isolated. */ }
+        }
         plugins.clear()
+        SdkTelemetry.reset()
     }
 }

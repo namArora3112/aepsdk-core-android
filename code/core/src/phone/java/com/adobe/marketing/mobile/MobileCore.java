@@ -23,6 +23,7 @@ import com.adobe.marketing.mobile.internal.DataMarshaller;
 import com.adobe.marketing.mobile.internal.PluginRegistry;
 import com.adobe.marketing.mobile.internal.eventhub.EventHub;
 import com.adobe.marketing.mobile.internal.eventhub.EventHubConstants;
+import com.adobe.marketing.mobile.internal.telemetry.SdkTelemetry;
 import com.adobe.marketing.mobile.plugin.IAepPlugin;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -374,6 +375,8 @@ public final class MobileCore {
      * @param pushIdentifier {@code String} representing the new push identifier
      */
     public static void setPushIdentifier(@Nullable final String pushIdentifier) {
+        SdkTelemetry.recordApiCall(
+                SdkTelemetry.CORE, EventHubConstants.VERSION_NUMBER, "setPushIdentifier");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(CoreConstants.EventDataKeys.Identity.PUSH_IDENTIFIER, pushIdentifier);
 
@@ -868,6 +871,8 @@ public final class MobileCore {
      * Clears all identifiers from Edge extensions and generates a new Experience Cloud ID (ECID).
      */
     public static void resetIdentities() {
+        SdkTelemetry.recordApiCall(
+                SdkTelemetry.CORE, EventHubConstants.VERSION_NUMBER, "resetIdentities");
         Event event =
                 new Event.Builder(
                                 CoreConstants.EventNames.RESET_IDENTITIES_REQUEST,
@@ -898,6 +903,8 @@ public final class MobileCore {
      * @param additionalContextData optional additional context for this session.
      */
     public static void lifecycleStart(@Nullable final Map<String, String> additionalContextData) {
+        SdkTelemetry.recordApiCall(
+                SdkTelemetry.CORE, EventHubConstants.VERSION_NUMBER, "lifecycleStart");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(
                 CoreConstants.EventDataKeys.Lifecycle.LIFECYCLE_ACTION_KEY,
@@ -932,6 +939,8 @@ public final class MobileCore {
      * <p>This method should be called from the Activity onPause method.
      */
     public static void lifecyclePause() {
+        SdkTelemetry.recordApiCall(
+                SdkTelemetry.CORE, EventHubConstants.VERSION_NUMBER, "lifecyclePause");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(
                 CoreConstants.EventDataKeys.Lifecycle.LIFECYCLE_ACTION_KEY,
@@ -965,6 +974,8 @@ public final class MobileCore {
      */
     public static void trackAction(
             @NonNull final String action, @Nullable final Map<String, String> contextData) {
+        SdkTelemetry.recordApiCall(
+                SdkTelemetry.CORE, EventHubConstants.VERSION_NUMBER, "trackAction");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(
                 CoreConstants.EventDataKeys.Analytics.TRACK_ACTION, action == null ? "" : action);
@@ -996,6 +1007,8 @@ public final class MobileCore {
      */
     public static void trackState(
             @NonNull final String state, @Nullable final Map<String, String> contextData) {
+        SdkTelemetry.recordApiCall(
+                SdkTelemetry.CORE, EventHubConstants.VERSION_NUMBER, "trackState");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(
                 CoreConstants.EventDataKeys.Analytics.TRACK_STATE, state == null ? "" : state);

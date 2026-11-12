@@ -93,3 +93,4 @@ build
 jacoco.exec
 
 .DS_Store
+.scout/

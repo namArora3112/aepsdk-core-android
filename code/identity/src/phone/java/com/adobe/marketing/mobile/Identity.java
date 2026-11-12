@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.identity.IdentityExtension;
+import com.adobe.marketing.mobile.internal.telemetry.SdkTelemetry;
 import com.adobe.marketing.mobile.internal.util.VisitorIDSerializer;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -27,6 +28,7 @@ public class Identity {
 
     private static final String CLASS_NAME = "Identity";
     private static final String EXTENSION_VERSION = "3.0.2";
+    private static final String TELEMETRY_EXTENSION_NAME = "com.adobe.module.identity";
     private static final String REQUEST_IDENTITY_EVENT_NAME = "IdentityRequestIdentity";
     private static final int PUBLIC_API_TIME_OUT_MILLISECOND = 500; // ms
     private static final String LOG_TAG = "Identity";
@@ -64,7 +66,8 @@ public class Identity {
      *     null values, otherwise they will be ignored
      */
     public static void syncIdentifiers(@NonNull final Map<String, String> identifiers) {
-        syncIdentifiers(identifiers, VisitorID.AuthenticationState.UNKNOWN);
+        SdkTelemetry.recordApiCall(TELEMETRY_EXTENSION_NAME, EXTENSION_VERSION, "syncIdentifiers");
+        syncIdentifiersInternal(identifiers, VisitorID.AuthenticationState.UNKNOWN);
     }
 
     /**
@@ -89,6 +92,13 @@ public class Identity {
     public static void syncIdentifiers(
             @NonNull final Map<String, String> identifiers,
             @NonNull final VisitorID.AuthenticationState authenticationState) {
+        SdkTelemetry.recordApiCall(TELEMETRY_EXTENSION_NAME, EXTENSION_VERSION, "syncIdentifiers");
+        syncIdentifiersInternal(identifiers, authenticationState);
+    }
+
+    private static void syncIdentifiersInternal(
+            final Map<String, String> identifiers,
+            final VisitorID.AuthenticationState authenticationState) {
         if (identifiers == null || identifiers.isEmpty()) {
             Log.warning(
                     LOG_TAG,
@@ -146,6 +156,7 @@ public class Identity {
             @NonNull final String identifierType,
             @Nullable final String identifier,
             @NonNull final VisitorID.AuthenticationState authenticationState) {
+        SdkTelemetry.recordApiCall(TELEMETRY_EXTENSION_NAME, EXTENSION_VERSION, "syncIdentifier");
         if (StringUtils.isNullOrEmpty(identifierType)) {
             Log.warning(
                     LOG_TAG,
@@ -162,7 +173,7 @@ public class Identity {
 
         HashMap<String, String> identifiers = new HashMap<>();
         identifiers.put(identifierType, identifier);
-        syncIdentifiers(identifiers, authenticationState);
+        syncIdentifiersInternal(identifiers, authenticationState);
     }
 
     /**
@@ -191,6 +202,8 @@ public class Identity {
      */
     public static void appendVisitorInfoForURL(
             @NonNull final String baseURL, @NonNull final AdobeCallback<String> callback) {
+        SdkTelemetry.recordApiCall(
+                TELEMETRY_EXTENSION_NAME, EXTENSION_VERSION, "appendVisitorInfoForURL");
         if (callback == null) {
             Log.warning(
                     LOG_TAG, CLASS_NAME, "appendVisitorInfoForURL : callback shouldn't be null.");
@@ -244,6 +257,7 @@ public class Identity {
      *     is met before the Identity URL variables are retrieved
      */
     public static void getUrlVariables(@NonNull final AdobeCallback<String> callback) {
+        SdkTelemetry.recordApiCall(TELEMETRY_EXTENSION_NAME, EXTENSION_VERSION, "getUrlVariables");
         if (callback == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "getUrlVariables : callback shouldn't be null.");
             return;
@@ -276,6 +290,7 @@ public class Identity {
      *     the customer identifiers are retrieved
      */
     public static void getIdentifiers(@NonNull final AdobeCallback<List<VisitorID>> callback) {
+        SdkTelemetry.recordApiCall(TELEMETRY_EXTENSION_NAME, EXTENSION_VERSION, "getIdentifiers");
         if (callback == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "getIdentifiers : callback shouldn't be null.");
             return;
@@ -312,6 +327,8 @@ public class Identity {
      *     ECID is retrieved
      */
     public static void getExperienceCloudId(@NonNull final AdobeCallback<String> callback) {
+        SdkTelemetry.recordApiCall(
+                TELEMETRY_EXTENSION_NAME, EXTENSION_VERSION, "getExperienceCloudId");
         if (callback == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "getIdentifiers : callback shouldn't be null.");
             return;

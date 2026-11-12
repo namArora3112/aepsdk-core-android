@@ -26,6 +26,7 @@ import com.adobe.marketing.mobile.internal.configuration.ConfigurationExtension
 import com.adobe.marketing.mobile.internal.eventhub.EventHub
 import com.adobe.marketing.mobile.internal.migration.V4Migrator
 import com.adobe.marketing.mobile.internal.migration.V5LegacyCleaner
+import com.adobe.marketing.mobile.internal.telemetry.SdkTelemetry
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.internal.context.App
@@ -160,6 +161,7 @@ internal class MobileCoreInitializer(
         }
 
         ServiceProvider.getInstance().appContextService.setApplication(application)
+        SdkTelemetry.startRegisteredPlugin()
         App.registerActivityLifecycleCallbacks(LaunchInfoCollector())
         scope.launch {
             mutex.withLock {
@@ -195,9 +197,11 @@ internal class MobileCoreInitializer(
             extensionsToRegister.addAll(it)
         }
 
+        val telemetryRegistration = SdkTelemetry.registrationStarted()
         scope.launch {
             mutex.withLock {
                 EventHub.shared.registerExtensions(extensionsToRegister) {
+                    SdkTelemetry.registrationCompleted(telemetryRegistration)
                     completionCallback?.call(null)
                 }
             }
