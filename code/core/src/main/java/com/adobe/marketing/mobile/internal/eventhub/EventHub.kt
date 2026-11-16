@@ -277,6 +277,8 @@ internal class EventHub {
                 LOG_TAG,
                 "Failed to dispatch event #$eventNumber - ($event)"
             )
+        } else {
+            EventHubTelemetry.observe(event)
         }
 
         if (Log.getLogLevel() >= LoggingMode.DEBUG) {
@@ -746,6 +748,7 @@ internal class EventHub {
      * Stops processing events and shuts down all registered extensions.
      */
     fun shutdown() {
+        EventHubTelemetry.shutdown()
         // Shutdown and clear all the extensions.
         eventHubExecutor.submit {
             eventDispatcher.shutdown()

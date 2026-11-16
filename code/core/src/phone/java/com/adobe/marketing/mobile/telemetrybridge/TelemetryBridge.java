@@ -1,36 +1,60 @@
 /*
-  POC ONLY - telemetry-integration branch. Optional reflective bridge to the telemetry plugin.
-  When the plugin artifact is present, calls flow; when absent, everything is a no-op.
-  No compile-time dependency of this SDK on the telemetry SDK.
+  Copyright 2026 Adobe. All rights reserved.
+  This file is licensed to you under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License. You may obtain a copy
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+  OF ANY KIND, either express or implied. See the License for the specific language
+  governing permissions and limitations under the License.
 */
+
 package com.adobe.marketing.mobile.telemetrybridge;
 
-import java.lang.reflect.Method;
+import com.adobe.marketing.mobile.internal.eventhub.EventHubTelemetry;
+import com.adobe.marketing.mobile.plugin.ITelemetryPlugin;
+import com.adobe.marketing.mobile.plugin.TelemetryEventMapping;
+import java.util.List;
 
-/** Optional bridge to the telemetry plugin public API (aepsdk-telemetry-android). */
+/** Optional typed direct hooks for operations not represented by EventHub events. */
 public final class TelemetryBridge {
-    private static final String TELEMETRY_CLASS = "com.adobe.marketing.mobile.telemetry.Telemetry";
-
     private TelemetryBridge() {}
+
+    /**
+     * Publishes an immutable capture policy. Unknown or denied permission must use enabled=false.
+     * Call on installation and policy/catalog changes, not for individual SDK events.
+     *
+     * @return the policy generation; the sink must reject callbacks carrying an older generation
+     */
+    public static long configure(
+            final ITelemetryPlugin plugin,
+            final boolean enabled,
+            final List<TelemetryEventMapping> mappings) {
+        return EventHubTelemetry.INSTANCE.configure(plugin, enabled, mappings);
+    }
 
     public static String operationStarted(final String producer, final String eventName) {
         try {
-            final Class<?> telemetry = Class.forName(TELEMETRY_CLASS);
-            final Method m = telemetry.getMethod("operationStarted", String.class, String.class, String.class);
-            return (String) m.invoke(null, producer, eventName, "directHook");
-        } catch (Throwable t) {
-            return null; // plugin absent or disabled - business path unaffected
+            return EventHubTelemetry.INSTANCE.operationStarted(producer, eventName);
+        } catch (Exception | LinkageError ignored) {
+            return null;
         }
     }
 
-    public static void operationCompleted(final String operationId, final String producer,
-                                          final String eventName, final String outcome, final String meaning) {
-        if (operationId == null) return;
+    public static void operationCompleted(
+            final String operationId,
+            final String producer,
+            final String eventName,
+            final String outcome,
+            final String meaning) {
+        if (operationId == null) {
+            return;
+        }
         try {
-            final Class<?> telemetry = Class.forName(TELEMETRY_CLASS);
-            final Method m = telemetry.getMethod("operationCompleted",
-                    String.class, String.class, String.class, String.class, String.class, String.class);
-            m.invoke(null, operationId, producer, eventName, outcome, meaning, "directHook");
-        } catch (Throwable ignored) { }
+            EventHubTelemetry.INSTANCE.operationCompleted(
+                    operationId, producer, eventName, outcome, meaning);
+        } catch (Exception | LinkageError ignored) {
+            // Telemetry failures must not change the business operation.
+        }
     }
 }

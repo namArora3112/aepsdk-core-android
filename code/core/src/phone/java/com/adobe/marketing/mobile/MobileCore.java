@@ -965,7 +965,6 @@ public final class MobileCore {
      */
     public static void trackAction(
             @NonNull final String action, @Nullable final Map<String, String> contextData) {
-        final String telemetryOp = com.adobe.marketing.mobile.telemetrybridge.TelemetryBridge.operationStarted("com.adobe.module.core", "sdk.core.trackAction");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(
                 CoreConstants.EventDataKeys.Analytics.TRACK_ACTION, action == null ? "" : action);
@@ -980,7 +979,6 @@ public final class MobileCore {
                         .setEventData(eventData)
                         .build();
         dispatchEvent(event);
-        com.adobe.marketing.mobile.telemetrybridge.TelemetryBridge.operationCompleted(telemetryOp, "com.adobe.module.core", "sdk.core.trackAction", "dispatched", "generic track dispatched");
     }
 
     /**
@@ -998,7 +996,6 @@ public final class MobileCore {
      */
     public static void trackState(
             @NonNull final String state, @Nullable final Map<String, String> contextData) {
-        final String telemetryOp = com.adobe.marketing.mobile.telemetrybridge.TelemetryBridge.operationStarted("com.adobe.module.core", "sdk.core.trackState");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(
                 CoreConstants.EventDataKeys.Analytics.TRACK_STATE, state == null ? "" : state);
@@ -1013,7 +1010,6 @@ public final class MobileCore {
                         .setEventData(eventData)
                         .build();
         dispatchEvent(event);
-        com.adobe.marketing.mobile.telemetrybridge.TelemetryBridge.operationCompleted(telemetryOp, "com.adobe.module.core", "sdk.core.trackState", "dispatched", "generic track dispatched");
     }
 
     // ========================================================

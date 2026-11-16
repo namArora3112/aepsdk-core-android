@@ -439,6 +439,11 @@ public abstract interface class com/adobe/marketing/mobile/plugin/IPushTemplateT
 	public abstract fun getPendingIntent (Lcom/adobe/marketing/mobile/plugin/PushInteraction;)Landroid/app/PendingIntent;
 }
 
+public abstract interface class com/adobe/marketing/mobile/plugin/ITelemetryPlugin : com/adobe/marketing/mobile/plugin/IAepPlugin {
+	public abstract fun recordEvent (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;JJ)V
+	public abstract fun recordOperation (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;J)V
+}
+
 public abstract interface class com/adobe/marketing/mobile/plugin/IUiTemplatePlugin : com/adobe/marketing/mobile/plugin/IAepPlugin {
 	public abstract fun buildPushTemplateNotification (Ljava/util/Map;Lcom/adobe/marketing/mobile/plugin/IPushTemplateTrackingProvider;)Landroid/app/Notification;
 }
@@ -456,6 +461,37 @@ public final class com/adobe/marketing/mobile/plugin/PushInteraction {
 	public final fun getMutablePendingIntent ()Z
 	public final fun getTemplateExtras ()Ljava/util/Map;
 	public final fun getType ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/adobe/marketing/mobile/plugin/TelemetryEventMapping {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)Lcom/adobe/marketing/mobile/plugin/TelemetryEventMapping;
+	public static synthetic fun copy$default (Lcom/adobe/marketing/mobile/plugin/TelemetryEventMapping;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lcom/adobe/marketing/mobile/plugin/TelemetryEventMapping;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnabled ()Z
+	public final fun getEventName ()Ljava/lang/String;
+	public final fun getEventSource ()Ljava/lang/String;
+	public final fun getEventType ()Ljava/lang/String;
+	public final fun getProducer ()Ljava/lang/String;
+	public final fun getRequiredKey ()Ljava/lang/String;
+	public final fun getTelemetryEventName ()Ljava/lang/String;
+	public final fun getXdmEventType ()Ljava/lang/String;
+	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -1166,6 +1202,12 @@ public abstract interface class com/adobe/marketing/mobile/services/uri/URIHandl
 public abstract interface class com/adobe/marketing/mobile/services/uri/UriOpening {
 	public abstract fun openUri (Ljava/lang/String;)Z
 	public abstract fun setUriHandler (Lcom/adobe/marketing/mobile/services/uri/URIHandler;)V
+}
+
+public final class com/adobe/marketing/mobile/telemetrybridge/TelemetryBridge {
+	public static fun configure (Lcom/adobe/marketing/mobile/plugin/ITelemetryPlugin;ZLjava/util/List;)J
+	public static fun operationCompleted (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static fun operationStarted (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 }
 
 public class com/adobe/marketing/mobile/util/CloneFailedException : java/lang/Exception {
