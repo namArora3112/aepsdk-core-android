@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -311,6 +312,35 @@ public class IdentityAPITests {
             assertEquals("com.adobe.eventType.identity", dispatchedEvent.getType());
             assertEquals("com.adobe.eventSource.requestIdentity", dispatchedEvent.getSource());
             assertNull(dispatchedEvent.getEventData());
+        }
+    }
+
+    @Test
+    public void test_identityGetterRequestsCannotBeDistinguishedByEventShape() {
+        try (MockedStatic<MobileCore> mobileCoreMockedStatic =
+                Mockito.mockStatic(MobileCore.class)) {
+            ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            ArgumentCaptor<Long> timeoutCaptor = ArgumentCaptor.forClass(Long.class);
+
+            Identity.getIdentifiers(value -> {});
+            Identity.getExperienceCloudId(value -> {});
+
+            mobileCoreMockedStatic.verify(
+                    () ->
+                            MobileCore.dispatchEventWithResponseCallback(
+                                    eventCaptor.capture(), timeoutCaptor.capture(), any()),
+                    Mockito.times(2));
+            Event identifiers = eventCaptor.getAllValues().get(0);
+            Event cloudId = eventCaptor.getAllValues().get(1);
+            assertEquals("IdentityRequestIdentity", identifiers.getName());
+            assertEquals(identifiers.getName(), cloudId.getName());
+            assertEquals(identifiers.getType(), cloudId.getType());
+            assertEquals(identifiers.getSource(), cloudId.getSource());
+            assertNull(identifiers.getEventData());
+            assertNull(cloudId.getEventData());
+            assertFalse(identifiers.getUniqueIdentifier().equals(cloudId.getUniqueIdentifier()));
+            assertEquals(Long.valueOf(500), timeoutCaptor.getAllValues().get(0));
+            assertEquals(timeoutCaptor.getAllValues().get(0), timeoutCaptor.getAllValues().get(1));
         }
     }
 

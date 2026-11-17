@@ -18,7 +18,9 @@ import com.adobe.marketing.mobile.EventSource
 import com.adobe.marketing.mobile.EventType
 import org.junit.Test
 import java.lang.Exception
+import java.util.concurrent.CompletableFuture
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
@@ -106,6 +108,52 @@ internal class EventListenerContainerTests {
         val testResponseEvent = Event.Builder("Test response event", eventType, eventSource).inResponseToEvent(testEvent).build()
 
         assertTrue { listener.shouldNotify(testResponseEvent) }
+    }
+
+    @Test
+    fun testEventListener_ReturnDoesNotEstablishDeferredOperationSuccess() {
+        val outcome = CompletableFuture<Unit>()
+        var observedFailure: Throwable? = null
+        val listener = ExtensionListenerContainer(eventType, eventSource) {
+            outcome.whenComplete { _, error -> observedFailure = error }
+        }
+        val event = Event.Builder("Deferred work", eventType, eventSource).build()
+
+        listener.notify(event)
+
+        assertFalse(outcome.isDone)
+        val failure = IllegalStateException("Work failed after the listener returned")
+        outcome.completeExceptionally(failure)
+        assertSame(failure, observedFailure)
+    }
+
+    @Test
+    fun testResponseListener_CorrelatedErrorResponseStillUsesCallNotFail() {
+        val request = Event.Builder("Request", EventType.EDGE, EventSource.REQUEST_CONTENT).build()
+        val response = Event.Builder("Error response", EventType.EDGE, EventSource.ERROR_RESPONSE_CONTENT)
+            .inResponseToEvent(request)
+            .build()
+        var received: Event? = null
+        var failed = false
+        val listener = ResponseListenerContainer(
+            request.uniqueIdentifier,
+            null,
+            object : AdobeCallbackWithError<Event> {
+                override fun call(value: Event?) {
+                    received = value
+                }
+
+                override fun fail(error: AdobeError?) {
+                    failed = true
+                }
+            }
+        )
+
+        assertTrue(listener.shouldNotify(response))
+        listener.notify(response)
+
+        assertSame(response, received)
+        assertFalse(failed)
     }
 
     @Test
