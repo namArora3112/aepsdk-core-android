@@ -30,5 +30,7 @@ data class TelemetryEventMapping @JvmOverloads constructor(
     val requiredKey: String? = null,
     val enabled: Boolean = true,
     val retireWhenApisCovered: List<String> = emptyList(),
-    val legacyFallback: Boolean = true
+    val legacyFallback: Boolean = true,
+    val requiredBooleanKey: String? = null,
+    val forbiddenKey: String? = null
 )

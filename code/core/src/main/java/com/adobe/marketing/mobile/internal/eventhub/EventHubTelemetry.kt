@@ -98,6 +98,9 @@ internal object EventHubTelemetry {
             require(it.eventSource.isNotBlank() && it.eventSource != EventSource.WILDCARD)
             require(it.producer.isNotBlank() && it.telemetryEventName.isNotBlank())
             require(it.requiredKey == null || it.requiredKey == "action" || it.requiredKey == "state")
+            require(it.forbiddenKey == null || it.forbiddenKey == "action" || it.forbiddenKey == "state")
+            require(it.requiredKey == null || it.requiredKey != it.forbiddenKey)
+            require(it.requiredBooleanKey == null || it.requiredBooleanKey in setOf("refreshmessages", "getpropositions", "updatepropositions"))
             require(it.retireWhenApisCovered.size <= 16 && it.retireWhenApisCovered.all(::validName))
             val xdmType = it.xdmEventType
             require(
@@ -123,6 +126,8 @@ internal object EventHubTelemetry {
                 mapping.eventSource.equals(event.source, ignoreCase = true) &&
                 (mapping.eventName == null || mapping.eventName == event.name) &&
                 (mapping.requiredKey == null || event.eventData?.containsKey(mapping.requiredKey) == true) &&
+                (mapping.forbiddenKey == null || event.eventData?.containsKey(mapping.forbiddenKey) != true) &&
+                (mapping.requiredBooleanKey == null || event.eventData?.get(mapping.requiredBooleanKey) == true) &&
                 matchesXdm(mapping.xdmEventType, event)
         }.distinctBy { it.producer to it.telemetryEventName }
         if (matched.isEmpty()) return

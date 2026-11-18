@@ -67,6 +67,20 @@ internal class EventHub {
     private val registeredExtensions: ConcurrentHashMap<String, ExtensionContainer> =
         ConcurrentHashMap()
 
+    fun registeredVersionsForTelemetry(): Map<String, String> {
+        val result = mutableMapOf("com.adobe.module.core" to EventHubConstants.VERSION_NUMBER)
+        registeredExtensions.values.asSequence().take(128).forEach {
+            val name = it.sharedStateName
+            val version = it.version
+            if (name != null && name.startsWith("com.adobe.") && name.length <= 160 &&
+                version != null && version.length <= 160
+            ) {
+                result[name] = version
+            }
+        }
+        return result.toMap()
+    }
+
     /**
      * Concurrent list which stores the event listeners for response events.
      */

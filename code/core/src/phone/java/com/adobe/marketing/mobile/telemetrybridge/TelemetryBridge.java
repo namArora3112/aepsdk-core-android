@@ -11,16 +11,26 @@
 
 package com.adobe.marketing.mobile.telemetrybridge;
 
+import com.adobe.marketing.mobile.internal.eventhub.EventHub;
 import com.adobe.marketing.mobile.internal.eventhub.EventHubTelemetry;
 import com.adobe.marketing.mobile.plugin.ITelemetryPlugin;
 import com.adobe.marketing.mobile.plugin.TelemetryApiCapability;
 import com.adobe.marketing.mobile.plugin.TelemetryEventMapping;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /** Optional typed direct hooks for operations not represented by EventHub events. */
 public final class TelemetryBridge {
     private TelemetryBridge() {}
+
+    public static Map<String, String> registeredSdkVersions() {
+        try {
+            return EventHub.Companion.getShared().registeredVersionsForTelemetry();
+        } catch (Exception | LinkageError ignored) {
+            return Collections.emptyMap();
+        }
+    }
 
     /**
      * Publishes an immutable capture policy. Unknown or denied permission must use enabled=false.

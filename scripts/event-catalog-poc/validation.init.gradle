@@ -1,0 +1,43 @@
+def pocRepo = System.getenv('POC_MAVEN_REPO')
+if (!pocRepo) throw new GradleException('Set POC_MAVEN_REPO to a private Maven repository.')
+settingsEvaluated { settings ->
+    def repos = settings.dependencyResolutionManagement.repositories
+    def local = repos.maven { url = new File(pocRepo).toURI() }
+    repos.remove(local)
+    repos.addFirst(local)
+}
+allprojects {
+    plugins.withId('com.android.application') {
+        def baseline = System.getenv('POC_LINT_BASELINE')
+        if (baseline && name == 'testapp' && rootProject.findProject(':messaging')) {
+            extensions.getByName('android').lint.baseline = new File(baseline)
+        }
+    }
+    configurations.configureEach {
+        resolutionStrategy.force('com.adobe.marketing.mobile:core:3.11.0-telemetry-catalog-poc-SNAPSHOT')
+    }
+    afterEvaluate {
+        if (plugins.hasPlugin('maven-publish')) {
+            publishing.repositories.maven {
+                name = 'CatalogPoc'
+                url = new File(pocRepo).toURI()
+            }
+        }
+    }
+}
+gradle.projectsEvaluated {
+    def core = gradle.rootProject.findProject(':core')
+    if (core) {
+        core.extensions.getByName('spotless').java {
+            target core.file('src/phone/java/com/adobe/marketing/mobile/telemetrybridge/TelemetryBridge.java')
+        }
+        core.extensions.getByName('spotless').kotlin {
+            target core.files(
+                'src/main/java/com/adobe/marketing/mobile/internal/eventhub/EventHub.kt',
+                'src/main/java/com/adobe/marketing/mobile/internal/eventhub/EventHubTelemetry.kt',
+                'src/main/java/com/adobe/marketing/mobile/plugin/TelemetryEventMapping.kt',
+                'src/test/java/com/adobe/marketing/mobile/internal/eventhub/CatalogSelectorTests.kt'
+            )
+        }
+    }
+}
