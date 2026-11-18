@@ -1,0 +1,60 @@
+{
+  "scope": "Android hybrid telemetry migration proof of concept; not a production release",
+  "branch": "poc/telemetry-hybrid-migration",
+  "repositories": {
+    "core": "https://github.com/namArora3112/aepsdk-core-android/tree/poc/telemetry-hybrid-migration",
+    "telemetry": "https://github.com/namArora3112/aepsdk-telemetry-android/tree/poc/telemetry-hybrid-migration",
+    "messaging": "https://github.com/namArora3112/aepsdk-messaging-android/tree/poc/telemetry-hybrid-migration"
+  },
+  "compatible_coordinates": {
+    "core": "com.adobe.marketing.mobile:core:3.11.0-telemetry-hybrid-poc-SNAPSHOT",
+    "telemetry": "com.adobe.marketing.mobile:telemetry:1.0.0-hybrid-poc"
+  },
+  "reproduction": "Set JAVA_HOME, ANDROID_HOME and ANDROID_SERIAL; run bash scripts/telemetry-hybrid-poc/verify.sh CORE_CHECKOUT TELEMETRY_CHECKOUT MESSAGING_CHECKOUT PRIVATE_MAVEN_DIR",
+  "checks": {
+    "core_unit": { "tests": 26, "failures": 0, "errors": 0, "skipped": 0 },
+    "telemetry_unit": { "tests": 12, "failures": 0, "errors": 0, "skipped": 0 },
+    "messaging_targeted_unit": { "tests": 160, "failures": 0, "errors": 0, "skipped": 0 },
+    "messaging_android": { "tests": 18, "failures": 0, "errors": 0, "skipped": 0 },
+    "core_changed_file_spotless_and_checkstyle": "passed",
+    "messaging_changed_file_spotless_and_checkstyle": "passed",
+    "portable_three_repository_verification": "passed",
+    "android_environment": "Android 14 emulator; synthetic network fixture"
+  },
+  "pocs": [
+    {
+      "name": "mixed_capability_capture",
+      "result": "Event observations, confirmed API entries and approved API outcomes remain distinct; old sinks retain fallback.",
+      "limits": "An API or extension version alone does not establish outcome coverage."
+    },
+    {
+      "name": "shared_selector_retirement",
+      "result": "Partial or entry-only declarations retain a shared selector; all reviewed members must declare outcomes before retirement.",
+      "limits": "The catalog author must identify the complete API group; the POC cannot discover hidden callers."
+    },
+    {
+      "name": "core_configuration_sunset",
+      "configuration": { "telemetry.captureMode": "direct_only" },
+      "rollback": { "telemetry.captureMode": "hybrid" },
+      "result": "Finalized Core configuration stops legacy projection without disabling business EventHub dispatch or direct API hooks; active calls retain their entry-time contract and mode.",
+      "limits": "Collection permission remains authoritative; direct_only deliberately sacrifices unsupported legacy observations."
+    },
+    {
+      "name": "real_messaging_adoption",
+      "result": "Two coalesced refresh calls produce two API entries and one observed request. Equivalent custom dispatch produces no refresh API entry. Local rejection and cache callback failure have explicit outcomes.",
+      "refresh_contract": "entry_only; no network, message-delivery or business success/failure rate",
+      "getter_contract": "cache_callback.v1; success, failure, rejected or actual callback timeout",
+      "evidence": "Seven HybridTelemetryMigrationPocTests export approved synthetic records to application files/hybrid-telemetry-poc/*.json."
+    }
+  ],
+  "limitations": [
+    "Only compatible Android POC branches were integrated; older Core, all-extension mixed versions, iOS and wrappers are not certified.",
+    "Missing completion is unknown/completion_not_observed, not timeout. Expiry is driven by new API entries or explicit maintenance/flush; independent idle scheduling is not implemented.",
+    "Worker handoff and pending state are bounded; overload can lose telemetry. Dropped handoffs are counted, but end-to-end completeness and performance are not established.",
+    "Fallback eligibility is evaluated by the worker; a queued observation can see newer migration declarations or mode. API operation metadata, unlike fallback eligibility, is pinned at entry.",
+    "The optional recorder uses POC schema 4/catalog 2; no production ingestion compatibility or failure-rate dashboard is certified.",
+    "A switch cannot upgrade applications that never adopt instrumentation. Permanent code removal requires a supported instrumentation floor or accepted coverage loss.",
+    "Capabilities and API group membership are trusted SDK metadata requiring review; invalid configuration selects direct_only for legacy fallback.",
+    "No full Android lint certification, production network, benchmark or downloaded-versus-programmatic configuration precedence experiment is claimed."
+  ]
+}

@@ -1,0 +1,51 @@
+def pocRepo = System.getenv('POC_MAVEN_REPO')
+if (!pocRepo) {
+    throw new GradleException('Set POC_MAVEN_REPO to a private, disposable Maven repository.')
+}
+settingsEvaluated { settings ->
+    def repos = settings.dependencyResolutionManagement.repositories
+    def local = repos.maven { url = new File(pocRepo).toURI() }
+    repos.remove(local)
+    repos.addFirst(local)
+}
+allprojects {
+    configurations.configureEach {
+        resolutionStrategy.force('com.adobe.marketing.mobile:core:3.11.0-telemetry-hybrid-poc-SNAPSHOT')
+    }
+    afterEvaluate {
+        if (plugins.hasPlugin('maven-publish')) {
+            publishing.repositories.maven {
+                name = 'HybridPoc'
+                url = new File(pocRepo).toURI()
+            }
+        }
+    }
+}
+gradle.projectsEvaluated {
+    def core = gradle.rootProject.findProject(':core')
+    if (core) {
+        core.extensions.getByName('spotless').java {
+            target core.file('src/phone/java/com/adobe/marketing/mobile/telemetrybridge/TelemetryBridge.java')
+        }
+        core.extensions.getByName('spotless').kotlin {
+            target core.files(
+                'src/main/java/com/adobe/marketing/mobile/internal/eventhub/EventHubTelemetry.kt',
+                'src/main/java/com/adobe/marketing/mobile/plugin/TelemetryEventMapping.kt',
+                'src/main/java/com/adobe/marketing/mobile/plugin/TelemetryApiCapability.kt',
+                'src/test/java/com/adobe/marketing/mobile/internal/eventhub/HybridTelemetryTests.kt'
+            )
+        }
+    }
+    def messaging = gradle.rootProject.findProject(':messaging')
+    if (messaging) {
+        messaging.extensions.getByName('spotless').java {
+            target messaging.files(
+                'src/phone/java/com/adobe/marketing/mobile/Messaging.java',
+                'src/phone/java/com/adobe/marketing/mobile/MessagingTelemetry.java'
+            )
+        }
+        messaging.extensions.getByName('spotless').kotlin {
+            target messaging.file('src/androidTest/java/com/adobe/marketing/mobile/messaging/HybridTelemetryMigrationPocTests.kt')
+        }
+    }
+}

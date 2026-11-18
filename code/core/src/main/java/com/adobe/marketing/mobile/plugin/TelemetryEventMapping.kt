@@ -28,5 +28,7 @@ data class TelemetryEventMapping @JvmOverloads constructor(
     val eventName: String? = null,
     val xdmEventType: String? = null,
     val requiredKey: String? = null,
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+    val retireWhenApisCovered: List<String> = emptyList(),
+    val legacyFallback: Boolean = true
 )

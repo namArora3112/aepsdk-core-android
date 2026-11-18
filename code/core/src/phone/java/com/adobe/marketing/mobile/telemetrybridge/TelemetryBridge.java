@@ -13,8 +13,10 @@ package com.adobe.marketing.mobile.telemetrybridge;
 
 import com.adobe.marketing.mobile.internal.eventhub.EventHubTelemetry;
 import com.adobe.marketing.mobile.plugin.ITelemetryPlugin;
+import com.adobe.marketing.mobile.plugin.TelemetryApiCapability;
 import com.adobe.marketing.mobile.plugin.TelemetryEventMapping;
 import java.util.List;
+import java.util.Map;
 
 /** Optional typed direct hooks for operations not represented by EventHub events. */
 public final class TelemetryBridge {
@@ -39,6 +41,45 @@ public final class TelemetryBridge {
         } catch (Exception | LinkageError ignored) {
             return null;
         }
+    }
+
+    public static boolean declareApiCapabilities(
+            final String producer, final List<TelemetryApiCapability> capabilities) {
+        try {
+            return EventHubTelemetry.INSTANCE.declareApiCapabilities(producer, capabilities);
+        } catch (Exception | LinkageError ignored) {
+            return false;
+        }
+    }
+
+    public static String apiStarted(final String producer, final String apiName) {
+        try {
+            return EventHubTelemetry.INSTANCE.apiStarted(producer, apiName);
+        } catch (Exception | LinkageError ignored) {
+            return null;
+        }
+    }
+
+    public static void apiCompleted(
+            final String id, final String producer, final String apiName, final String outcome) {
+        if (id == null) return;
+        try {
+            EventHubTelemetry.INSTANCE.apiCompleted(id, producer, apiName, outcome);
+        } catch (Exception | LinkageError ignored) {
+            // Optional instrumentation never changes business behavior.
+        }
+    }
+
+    public static boolean setCaptureMode(final String mode) {
+        return EventHubTelemetry.INSTANCE.setCaptureMode(mode);
+    }
+
+    public static Map<String, Object> migrationStatus() {
+        return EventHubTelemetry.INSTANCE.migrationStatus();
+    }
+
+    public static void expireApiOperations() {
+        EventHubTelemetry.INSTANCE.expireApiOperations();
     }
 
     public static void operationCompleted(
