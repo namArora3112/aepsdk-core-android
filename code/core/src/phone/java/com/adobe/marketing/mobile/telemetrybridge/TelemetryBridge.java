@@ -13,9 +13,9 @@ package com.adobe.marketing.mobile.telemetrybridge;
 
 import com.adobe.marketing.mobile.internal.eventhub.EventHub;
 import com.adobe.marketing.mobile.internal.eventhub.EventHubTelemetry;
-import com.adobe.marketing.mobile.plugin.ITelemetryPlugin;
 import com.adobe.marketing.mobile.plugin.TelemetryApiCapability;
 import com.adobe.marketing.mobile.plugin.TelemetryEventMapping;
+import com.adobe.marketing.mobile.plugin.ITelemetryPlugin;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +23,25 @@ import java.util.Map;
 /** Optional typed direct hooks for operations not represented by EventHub events. */
 public final class TelemetryBridge {
     private TelemetryBridge() {}
+
+    /**
+     * Compatibility entry for older POCs. Policy and catalog matching are not
+     * performed by Core; metadata-mapper plugins are the supported handoff.
+     */
+    public static long configure(
+            final ITelemetryPlugin plugin,
+            final boolean enabled,
+            final List<TelemetryEventMapping> mappings) {
+        if (!(plugin instanceof com.adobe.marketing.mobile.plugin.IEventTelemetryPlugin)) {
+            if (enabled) {
+                throw new IllegalArgumentException(
+                        "Telemetry event mapper plugin is required; Core does not match catalogs");
+            }
+            return EventHubTelemetry.INSTANCE.shutdownWithGeneration();
+        }
+        return EventHubTelemetry.INSTANCE.configure(
+                (com.adobe.marketing.mobile.plugin.IEventTelemetryPlugin) plugin, enabled);
+    }
 
     public static Map<String, String> registeredSdkVersions() {
         try {
@@ -32,17 +51,10 @@ public final class TelemetryBridge {
         }
     }
 
-    /**
-     * Publishes an immutable capture policy. Unknown or denied permission must use enabled=false.
-     * Call on installation and policy/catalog changes, not for individual SDK events.
-     *
-     * @return the policy generation; the sink must reject callbacks carrying an older generation
-     */
-    public static long configure(
-            final ITelemetryPlugin plugin,
-            final boolean enabled,
-            final List<TelemetryEventMapping> mappings) {
-        return EventHubTelemetry.INSTANCE.configure(plugin, enabled, mappings);
+    public static long configureEventMapper(
+            final com.adobe.marketing.mobile.plugin.IEventTelemetryPlugin plugin,
+            final boolean enabled) {
+        return EventHubTelemetry.INSTANCE.configure(plugin, enabled);
     }
 
     public static String operationStarted(final String producer, final String eventName) {

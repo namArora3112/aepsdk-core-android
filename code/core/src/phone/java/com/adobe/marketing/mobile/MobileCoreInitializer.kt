@@ -77,6 +77,8 @@ internal class MobileCoreInitializer(
 
     private val setApplicationCalled = AtomicBoolean(false)
     private val initializeCalled = AtomicBoolean(false)
+    private val startupMarkers = mutableSetOf<String>()
+    @Volatile private var startupLoggingEnabled = false
     // Using this mutex to guard migration and EventHistory initialization, ensuring they complete
     // in a background thread before any extensions are registered.
     private val mutex = Mutex()
@@ -89,6 +91,7 @@ internal class MobileCoreInitializer(
         initOptions: InitOptions,
         completionCallback: AdobeCallback<*>?
     ) {
+        logStartup("CORE_INITIALIZE_CALLED", application)
         if (initializeCalled.getAndSet(true)) {
             Log.debug(CoreConstants.LOG_TAG, LOG_TAG, "initialize failed - ignoring as it was already called.")
             completionCallback?.call(null)
@@ -139,6 +142,7 @@ internal class MobileCoreInitializer(
     }
 
     fun setApplication(application: Application) {
+        logStartup("CORE_SET_APPLICATION_CALLED", application)
         if (!isUserUnlocked(application)) {
             Log.error(
                 CoreConstants.LOG_TAG,
@@ -181,6 +185,7 @@ internal class MobileCoreInitializer(
     }
 
     fun registerExtensions(extensions: List<Class<out Extension>?>?, completionCallback: AdobeCallback<*>?) {
+        logStartup("CORE_REGISTER_EXTENSIONS_CALLED")
         if (!setApplicationCalled.get()) {
             Log.error(
                 CoreConstants.LOG_TAG,
@@ -198,9 +203,30 @@ internal class MobileCoreInitializer(
         scope.launch {
             mutex.withLock {
                 EventHub.shared.registerExtensions(extensionsToRegister) {
+                    logStartup("CORE_EXTENSIONS_REGISTERED")
                     completionCallback?.call(null)
                 }
             }
+        }
+    }
+
+    private fun logStartup(marker: String, application: Application? = null) {
+        runCatching {
+            if (application != null) {
+                startupLoggingEnabled = application.applicationInfo.flags and
+                    android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+            }
+            if (!startupLoggingEnabled) return
+            synchronized(startupMarkers) {
+                if (!startupMarkers.add(marker)) return
+            }
+            android.util.Log.w(
+                "AEPTelemetryPOC",
+                "\n================ AEP TELEMETRY POC ================\n" +
+                    "$marker; first_call_in_process=true; logged_at_ms=${System.currentTimeMillis()}; " +
+                    "monotonic_ns=${System.nanoTime()}; thread=${Thread.currentThread().name}\n" +
+                    "=================================================="
+            )
         }
     }
 
@@ -215,6 +241,8 @@ internal class MobileCoreInitializer(
 
         setApplicationCalled.set(false)
         initializeCalled.set(false)
+        startupLoggingEnabled = false
+        synchronized(startupMarkers) { startupMarkers.clear() }
     }
 }
 

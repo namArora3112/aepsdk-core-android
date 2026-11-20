@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile
 
 import android.app.Activity
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
@@ -148,6 +149,37 @@ class MobileCoreInitializerTests {
         val application1 = mock(Application::class.java)
         mobileCoreInitializer.setApplication(application1)
         assertEquals(application, ServiceProvider.getInstance().appContextService.application)
+    }
+
+    @Test
+    fun `test debug startup markers are logged once before bootstrap and registration`() {
+        val info = mock(ApplicationInfo::class.java)
+        info.flags = ApplicationInfo.FLAG_DEBUGGABLE
+        `when`(application.applicationInfo).thenReturn(info)
+        Mockito.mockStatic(android.util.Log::class.java).use { logs ->
+            mobileCoreInitializer.setApplication(application)
+            mobileCoreInitializer.setApplication(application)
+            mobileCoreInitializer.registerExtensions(emptyList(), null)
+            mobileCoreInitializer.registerExtensions(emptyList(), null)
+            logs.verify {
+                android.util.Log.w(eq("AEPTelemetryPOC"), org.mockito.ArgumentMatchers.contains("CORE_SET_APPLICATION_CALLED;"))
+            }
+            logs.verify {
+                android.util.Log.w(eq("AEPTelemetryPOC"), org.mockito.ArgumentMatchers.contains("CORE_REGISTER_EXTENSIONS_CALLED;"))
+            }
+        }
+    }
+
+    @Test
+    fun `test release bootstrap does not emit startup diagnostics`() {
+        val info = mock(ApplicationInfo::class.java)
+        info.flags = 0
+        `when`(application.applicationInfo).thenReturn(info)
+        Mockito.mockStatic(android.util.Log::class.java).use { logs ->
+            mobileCoreInitializer.setApplication(application)
+            mobileCoreInitializer.registerExtensions(emptyList(), null)
+            logs.verify({ android.util.Log.w(eq("AEPTelemetryPOC"), any<String>()) }, never())
+        }
     }
 
     @Test
